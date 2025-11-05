@@ -85,6 +85,19 @@ Modern template syntax with signals:
 ### Standalone Component Imports
 All dependencies must be explicitly imported in component `imports` array since there are no modules.
 
+## Application Structure
+
+### Multi-Page Architecture
+- **Route-based navigation**: `/manage` and `/random` routes
+- **Main App Shell**: Header with navigation, router outlet, footer
+- **Page Components**: Management (CRUD) and Random suggestion pages
+- **Shared Service**: SuggestionService used across components
+
+### Page Responsibilities
+- **Manage Page** (`/manage`): Full CRUD operations for suggestions
+- **Random Page** (`/random`): Get random suggestions with optional type filtering
+- **Navigation**: Sticky header with route-based active states
+
 ## API Integration
 
 ### Mockoon API Structure
@@ -95,18 +108,20 @@ All dependencies must be explicitly imported in component `imports` array since 
 
 ### Service Layer Pattern
 - Services use `inject()` function for dependency injection
-- HTTP operations return Observable streams
+- HTTP operations return Observable streams with RxJS operators for data transformation
 - Error handling via RxJS operators in components
 - Models separated in `src/models/` directory
+- **Extended Methods**: `getUniqueTypes()`, `getRandomSuggestion(type?)`
 
 ## When Adding New Features
 
 1. **Components**: Use `ng generate component` to maintain consistent structure
-2. **Routing**: Add routes to `src/app/app.routes.ts`
+2. **Routing**: Add routes to `src/app/app.routes.ts` with proper page titles
 3. **Services**: Create as injectable standalone services with `inject()` pattern
 4. **State**: Prefer signals over RxJS subjects for simple state
 5. **Styles**: Component styles are scoped; global styles go in `src/styles.scss`
 6. **API Integration**: Follow the existing service pattern for HTTP calls
+7. **Navigation**: Update main nav in `app.html` if adding new pages
 
 ## Testing Notes
 - Karma + Jasmine setup

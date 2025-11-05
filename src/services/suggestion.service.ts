@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Suggestion, CreateSuggestionRequest, UpdateSuggestionRequest } from '../models/suggestion.model';
 
 @Injectable({
@@ -28,5 +28,33 @@ export class SuggestionService {
 
   deleteSuggestion(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getUniqueTypes(): Observable<string[]> {
+    return this.getAllSuggestions().pipe(
+      map(suggestions => {
+        const types = suggestions.map(s => s.type);
+        return [...new Set(types)].sort();
+      })
+    );
+  }
+
+  getRandomSuggestion(type?: string): Observable<Suggestion | null> {
+    return this.getAllSuggestions().pipe(
+      map(suggestions => {
+        let filteredSuggestions = suggestions;
+
+        if (type) {
+          filteredSuggestions = suggestions.filter(s => s.type === type);
+        }
+
+        if (filteredSuggestions.length === 0) {
+          return null;
+        }
+
+        const randomIndex = Math.floor(Math.random() * filteredSuggestions.length);
+        return filteredSuggestions[randomIndex];
+      })
+    );
   }
 }

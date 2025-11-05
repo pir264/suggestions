@@ -1,0 +1,120 @@
+<div class="random-suggestion-container">
+  <div class="header">
+    <h1>Random Suggestion</h1>
+    <p>Get a random suggestion, optionally filtered by type</p>
+  </div>
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <h2>Filter Options</h2>
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="form-group">
+        <label for="selectedType">Filter by Type (Optional):</label>
+        <select
+          id="selectedType"
+          formControlName="selectedType"
+          [disabled]="loading()"
+        >
+          <option value="">All Types</option>
+          @for (type of availableTypes(); track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          type="button"
+          (click)="getRandomSuggestion()"
+          [disabled]="loading()"
+          class="btn btn-primary"
+        >
+          {{ loading() ? 'Getting Suggestion...' : 'Get Random Suggestion' }}
+        </button>
+
+        <button
+          type="button"
+          (click)="clearFilter()"
+          [disabled]="loading()"
+          class="btn btn-secondary"
+        >
+          Clear Filter
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Result Section -->
+  <div class="result-section">
+    @if (loading() && !currentSuggestion()) {
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Finding a random suggestion{{ getSelectedTypeText() }}...</p>
+      </div>
+    } @else if (noSuggestionsFound()) {
+      <div class="no-results">
+        <div class="no-results-icon">🤷‍♂️</div>
+        <h3>No Suggestions Found</h3>
+        <p>No suggestions available{{ getSelectedTypeText() }}. Try a different filter or add some suggestions first!</p>
+      </div>
+    } @else if (currentSuggestion()) {
+      <div class="suggestion-result">
+        <h2>Your Random Suggestion</h2>
+        <div class="suggestion-card">
+          <div class="suggestion-icon">💡</div>
+          <div class="suggestion-content">
+            <div class="suggestion-field">
+              <strong>Type:</strong>
+              <span class="suggestion-type">{{ currentSuggestion()!.type }}</span>
+            </div>
+            <div class="suggestion-field">
+              <strong>Suggestion:</strong>
+              <span class="suggestion-value">{{ currentSuggestion()!.waarde }}</span>
+            </div>
+            <div class="suggestion-field">
+              <strong>ID:</strong>
+              <span class="suggestion-id">{{ currentSuggestion()!.id }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button
+            type="button"
+            (click)="getRandomSuggestion()"
+            [disabled]="loading()"
+            class="btn btn-primary"
+          >
+            Get Another Random Suggestion
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="welcome-state">
+        <div class="welcome-icon">🎲</div>
+        <h3>Ready to Get a Random Suggestion?</h3>
+        <p>Click the button above to get a random suggestion. You can optionally filter by type first.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Stats Section -->
+  <div class="stats-section">
+    <h3>Available Types</h3>
+    @if (availableTypes().length > 0) {
+      <div class="type-badges">
+        @for (type of availableTypes(); track type) {
+          <span class="type-badge">{{ type }}</span>
+        }
+      </div>
+    } @else {
+      <p class="no-types">No suggestion types available yet.</p>
+    }
+  </div>
+</div>

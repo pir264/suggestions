@@ -1,0 +1,127 @@
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .app-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-nav {
+      display: flex;
+      gap: 1rem;
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.1);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+
+        .nav-icon {
+          font-size: 1.1rem;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          transform: translateY(-1px);
+        }
+
+        &.active {
+          background: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+  }
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+}
+
+.app-footer {
+  background-color: #374151;
+  color: #d1d5db;
+  text-align: center;
+  padding: 1.5rem;
+  margin-top: auto;
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .app-header {
+    .header-content {
+      padding: 1rem;
+      flex-direction: column;
+      text-align: center;
+
+      .app-title {
+        font-size: 1.5rem;
+      }
+
+      .main-nav {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+
+        .nav-link {
+          flex: 1;
+          min-width: 150px;
+          justify-content: center;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    .header-content {
+      .main-nav {
+        flex-direction: column;
+        width: 100%;
+
+        .nav-link {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

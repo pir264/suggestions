@@ -1,3 +1,33 @@
-<app-suggestion-component></app-suggestion-component>
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-content">
+      <h1 class="app-title">{{ title() | titlecase }} App</h1>
+      <nav class="main-nav">
+        <a
+          routerLink="/manage"
+          routerLinkActive="active"
+          class="nav-link"
+        >
+          <span class="nav-icon">⚙️</span>
+          Manage Suggestions
+        </a>
+        <a
+          routerLink="/random"
+          routerLinkActive="active"
+          class="nav-link"
+        >
+          <span class="nav-icon">🎲</span>
+          Random Suggestion
+        </a>
+      </nav>
+    </div>
+  </header>
 
-<router-outlet />
+  <main class="app-main">
+    <router-outlet />
+  </main>
+
+  <footer class="app-footer">
+    <p>&copy; 2025 Suggestions App - Built with Angular {{ '20' }}</p>
+  </footer>
+</div>
