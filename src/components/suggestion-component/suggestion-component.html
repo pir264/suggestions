@@ -1,0 +1,128 @@
+<div class="suggestions-container">
+  <div class="header">
+    <h1>Suggestions Management</h1>
+    <p>Manage your suggestions with full CRUD operations</p>
+  </div>
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Suggestion Form -->
+  <div class="form-section">
+    <h2>{{ editingId() ? 'Edit' : 'Add New' }} Suggestion</h2>
+    <form [formGroup]="suggestionForm" (ngSubmit)="onSubmit()" class="suggestion-form">
+      <div class="form-group">
+        <label for="type">Type:</label>
+        <input
+          id="type"
+          type="text"
+          formControlName="type"
+          [class.error]="isFieldInvalid('type')"
+          placeholder="Enter suggestion type (e.g., locatie)"
+        />
+        @if (isFieldInvalid('type')) {
+          <div class="field-error">{{ getFieldError('type') }}</div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="waarde">Waarde:</label>
+        <input
+          id="waarde"
+          type="text"
+          formControlName="waarde"
+          [class.error]="isFieldInvalid('waarde')"
+          placeholder="Enter suggestion value (e.g., tandartspraktijk)"
+        />
+        @if (isFieldInvalid('waarde')) {
+          <div class="field-error">{{ getFieldError('waarde') }}</div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          [disabled]="loading()"
+          class="btn btn-primary"
+        >
+          {{ loading() ? 'Processing...' : (editingId() ? 'Update' : 'Create') }}
+        </button>
+
+        @if (editingId()) {
+          <button
+            type="button"
+            (click)="cancelEdit()"
+            class="btn btn-secondary"
+          >
+            Cancel
+          </button>
+        }
+      </div>
+    </form>
+  </div>
+
+  <!-- Suggestions List -->
+  <div class="list-section">
+    <h2>Suggestions List</h2>
+
+    @if (loading() && suggestions().length === 0) {
+      <div class="loading">Loading suggestions...</div>
+    } @else if (suggestions().length === 0) {
+      <div class="empty-state">
+        <p>No suggestions found. Create your first suggestion above!</p>
+      </div>
+    } @else {
+      <div class="suggestions-grid">
+        @for (suggestion of suggestions(); track suggestion.id) {
+          <div class="suggestion-card">
+            <div class="suggestion-content">
+              <div class="suggestion-field">
+                <strong>ID:</strong>
+                <span class="suggestion-id">{{ suggestion.id }}</span>
+              </div>
+              <div class="suggestion-field">
+                <strong>Type:</strong>
+                <span class="suggestion-type">{{ suggestion.type }}</span>
+              </div>
+              <div class="suggestion-field">
+                <strong>Waarde:</strong>
+                <span class="suggestion-waarde">{{ suggestion.waarde }}</span>
+              </div>
+            </div>
+
+            <div class="suggestion-actions">
+              <button
+                (click)="editSuggestion(suggestion)"
+                class="btn btn-edit"
+                [disabled]="loading()"
+              >
+                Edit
+              </button>
+              <button
+                (click)="deleteSuggestion(suggestion.id)"
+                class="btn btn-delete"
+                [disabled]="loading()"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Refresh Button -->
+  <div class="refresh-section">
+    <button
+      (click)="loadSuggestions()"
+      [disabled]="loading()"
+      class="btn btn-refresh"
+    >
+      {{ loading() ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+</div>
