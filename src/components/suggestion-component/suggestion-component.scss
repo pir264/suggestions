@@ -246,6 +246,16 @@
       }
     }
 
+    &.btn-view {
+      background-color: #0ea5e9;
+      color: white;
+      padding: 0.5rem 1rem;
+
+      &:hover:not(:disabled) {
+        background-color: #0284c7;
+      }
+    }
+
     &.btn-refresh {
       background-color: #8b5cf6;
       color: white;

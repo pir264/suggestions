@@ -1,12 +1,13 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SuggestionService } from '../../services/suggestion.service';
 import { Suggestion, CreateSuggestionRequest, UpdateSuggestionRequest } from '../../models/suggestion.model';
 
 @Component({
   selector: 'app-suggestion-component',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './suggestion-component.html',
   styleUrl: './suggestion-component.scss',
 })
@@ -15,6 +16,9 @@ export class SuggestionComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   suggestions = signal<Suggestion[]>([]);
+  filteredSuggestions = signal<Suggestion[]>([]);
+  availableTypes = signal<string[]>([]);
+  selectedType = signal<string>('');
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   editingId = signal<string | null>(null);
@@ -26,6 +30,7 @@ export class SuggestionComponent implements OnInit {
 
   ngOnInit() {
     this.loadSuggestions();
+    this.loadAvailableTypes();
   }
 
   loadSuggestions() {
@@ -35,6 +40,7 @@ export class SuggestionComponent implements OnInit {
     this.suggestionService.getAllSuggestions().subscribe({
       next: (suggestions) => {
         this.suggestions.set(suggestions);
+        this.applyFilter();
         this.loading.set(false);
       },
       error: (err) => {
@@ -43,6 +49,32 @@ export class SuggestionComponent implements OnInit {
         console.error('Error loading suggestions:', err);
       }
     });
+  }
+
+  loadAvailableTypes() {
+    this.suggestionService.getUniqueTypes().subscribe({
+      next: (types) => {
+        this.availableTypes.set(types);
+      },
+      error: (err) => {
+        console.error('Error loading types:', err);
+      }
+    });
+  }
+
+  onTypeFilterChange(type: string) {
+    this.selectedType.set(type);
+    this.applyFilter();
+  }
+
+  applyFilter() {
+    const type = this.selectedType();
+    const all = this.suggestions();
+    if (!type) {
+      this.filteredSuggestions.set(all);
+    } else {
+      this.filteredSuggestions.set(all.filter(s => s.type === type));
+    }
   }
 
   onSubmit() {
@@ -68,6 +100,8 @@ export class SuggestionComponent implements OnInit {
     this.suggestionService.createSuggestion(suggestion).subscribe({
       next: (newSuggestion) => {
         this.suggestions.update(suggestions => [...suggestions, newSuggestion]);
+        this.applyFilter();
+        this.loadAvailableTypes();
         this.resetForm();
         this.loading.set(false);
       },
@@ -88,6 +122,8 @@ export class SuggestionComponent implements OnInit {
         this.suggestions.update(suggestions =>
           suggestions.map(s => s.id === id ? updatedSuggestion : s)
         );
+        this.applyFilter();
+        this.loadAvailableTypes();
         this.resetForm();
         this.loading.set(false);
       },
@@ -120,6 +156,8 @@ export class SuggestionComponent implements OnInit {
         this.suggestions.update(suggestions =>
           suggestions.filter(s => s.id !== id)
         );
+        this.applyFilter();
+        this.loadAvailableTypes();
         this.loading.set(false);
       },
       error: (err) => {

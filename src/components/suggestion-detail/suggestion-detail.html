@@ -1,0 +1,61 @@
+<div class="suggestion-detail-container">
+  <div class="header">
+    <h1>Suggestion Details</h1>
+    <p>View detailed information about this suggestion</p>
+  </div>
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading suggestion details...</p>
+    </div>
+  } @else if (suggestion()) {
+    <div class="detail-card">
+      <div class="detail-header">
+        <h2>Suggestion Information</h2>
+      </div>
+
+      <div class="detail-content">
+        <div class="detail-field">
+          <label>ID:</label>
+          <span class="field-value suggestion-id">{{ suggestion()!.id }}</span>
+        </div>
+
+        <div class="detail-field">
+          <label>Type:</label>
+          <span class="field-value suggestion-type">{{ suggestion()!.type }}</span>
+        </div>
+
+        <div class="detail-field">
+          <label>Value (Waarde):</label>
+          <span class="field-value suggestion-waarde">{{ suggestion()!.waarde }}</span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button
+          (click)="goBack()"
+          class="btn btn-secondary"
+        >
+          ← Back to List
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <p>Suggestion not found.</p>
+      <button
+        (click)="goBack()"
+        class="btn btn-secondary"
+      >
+        ← Back to List
+      </button>
+    </div>
+  }
+</div>

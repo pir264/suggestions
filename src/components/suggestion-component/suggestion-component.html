@@ -68,15 +68,32 @@
   <div class="list-section">
     <h2>Suggestions List</h2>
 
-    @if (loading() && suggestions().length === 0) {
+    <!-- Filter Dropdown -->
+    <div class="form-group type-filter-group">
+      <label for="typeFilter">Filter by Type:</label>
+      <select
+        id="typeFilter"
+        [value]="selectedType()"
+        (change)="onTypeFilterChange($any($event.target).value)"
+        [disabled]="loading()"
+        class="type-filter-select"
+      >
+        <option value="">All Types</option>
+        @for (type of availableTypes(); track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </div>
+
+    @if (loading() && filteredSuggestions().length === 0) {
       <div class="loading">Loading suggestions...</div>
-    } @else if (suggestions().length === 0) {
+    } @else if (filteredSuggestions().length === 0) {
       <div class="empty-state">
-        <p>No suggestions found. Create your first suggestion above!</p>
+        <p>No suggestions found for the selected type. Create your first suggestion above!</p>
       </div>
     } @else {
       <div class="suggestions-grid">
-        @for (suggestion of suggestions(); track suggestion.id) {
+        @for (suggestion of filteredSuggestions(); track suggestion.id) {
           <div class="suggestion-card">
             <div class="suggestion-content">
               <div class="suggestion-field">
@@ -94,6 +111,12 @@
             </div>
 
             <div class="suggestion-actions">
+              <a
+                [routerLink]="['/suggestion', suggestion.id]"
+                class="btn btn-view"
+              >
+                View Details
+              </a>
               <button
                 (click)="editSuggestion(suggestion)"
                 class="btn btn-edit"
