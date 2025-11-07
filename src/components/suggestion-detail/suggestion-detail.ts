@@ -1,8 +1,13 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SuggestionService } from '../../services/suggestion.service';
 import { Suggestion } from '../../models/suggestion.model';
+import { AppState } from '../../store/suggestion.state';
+import * as SuggestionActions from '../../store/suggestion.actions';
+import * as SuggestionSelectors from '../../store/suggestion.selectors';
 
 @Component({
   selector: 'app-suggestion-detail',
@@ -11,38 +16,22 @@ import { Suggestion } from '../../models/suggestion.model';
   styleUrl: './suggestion-detail.scss',
 })
 export class SuggestionDetail implements OnInit {
-  private readonly suggestionService = inject(SuggestionService);
+  private readonly store = inject(Store<AppState>);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  suggestion = signal<Suggestion | null>(null);
-  loading = signal<boolean>(false);
-  error = signal<string | null>(null);
+  loading = toSignal(this.store.select(SuggestionSelectors.selectSuggestionsLoading), { initialValue: false });
+  error = toSignal(this.store.select(SuggestionSelectors.selectSuggestionsError), { initialValue: null });
+  suggestion = toSignal(this.store.select(SuggestionSelectors.selectSelectedSuggestion), { initialValue: null });
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.loadSuggestion(id);
+      this.store.dispatch(SuggestionActions.loadSuggestionById({ id }));
     } else {
-      this.error.set('No suggestion ID provided');
+      // Navigate back if no ID provided
+      this.router.navigate(['/manage']);
     }
-  }
-
-  loadSuggestion(id: string) {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.suggestionService.getSuggestionById(id).subscribe({
-      next: (suggestion) => {
-        this.suggestion.set(suggestion);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to load suggestion details. Please try again.');
-        this.loading.set(false);
-        console.error('Error loading suggestion:', err);
-      }
-    });
   }
 
   goBack() {

@@ -6,7 +6,13 @@
 
   @if (error()) {
     <div class="error-message">
-      {{ error() }}
+      <h3>⚠️ Connection Error</h3>
+      <p>{{ error() }}</p>
+      <p><strong>Note:</strong> Make sure the Mockoon API server is running on http://localhost:3002/suggesties</p>
+      <p>Or check the developer console for more details.</p>
+      <button (click)="refreshSuggestions()" class="btn btn-primary">
+        Try Again
+      </button>
     </div>
   }
 
@@ -141,7 +147,7 @@
   <!-- Refresh Button -->
   <div class="refresh-section">
     <button
-      (click)="loadSuggestions()"
+      (click)="refreshSuggestions()"
       [disabled]="loading()"
       class="btn btn-refresh"
     >

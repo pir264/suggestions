@@ -1,9 +1,14 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SuggestionService } from '../../services/suggestion.service';
 import { Suggestion, CreateSuggestionRequest, UpdateSuggestionRequest } from '../../models/suggestion.model';
+import { AppState } from '../../store/suggestion.state';
+import * as SuggestionActions from '../../store/suggestion.actions';
+import * as SuggestionSelectors from '../../store/suggestion.selectors';
 
 @Component({
   selector: 'app-suggestion-component',
@@ -12,15 +17,17 @@ import { Suggestion, CreateSuggestionRequest, UpdateSuggestionRequest } from '..
   styleUrl: './suggestion-component.scss',
 })
 export class SuggestionComponent implements OnInit {
-  private readonly suggestionService = inject(SuggestionService);
+  private readonly store = inject(Store<AppState>);
   private readonly fb = inject(FormBuilder);
 
-  suggestions = signal<Suggestion[]>([]);
-  filteredSuggestions = signal<Suggestion[]>([]);
-  availableTypes = signal<string[]>([]);
-  selectedType = signal<string>('');
-  loading = signal<boolean>(false);
-  error = signal<string | null>(null);
+  // NgRx selectors as signals using toSignal
+  suggestions = toSignal(this.store.select(SuggestionSelectors.selectAllSuggestions), { initialValue: [] });
+  filteredSuggestions = toSignal(this.store.select(SuggestionSelectors.selectFilteredSuggestions), { initialValue: [] });
+  availableTypes = toSignal(this.store.select(SuggestionSelectors.selectUniqueTypes), { initialValue: [] });
+  loading = toSignal(this.store.select(SuggestionSelectors.selectSuggestionsLoading), { initialValue: false });
+  error = toSignal(this.store.select(SuggestionSelectors.selectSuggestionsError), { initialValue: null });
+  selectedType = toSignal(this.store.select(SuggestionSelectors.selectTypeFilter), { initialValue: '' });
+
   editingId = signal<string | null>(null);
 
   suggestionForm: FormGroup = this.fb.group({
@@ -29,52 +36,15 @@ export class SuggestionComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.loadSuggestions();
-    this.loadAvailableTypes();
+    this.store.dispatch(SuggestionActions.loadSuggestions());
   }
 
-  loadSuggestions() {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.suggestionService.getAllSuggestions().subscribe({
-      next: (suggestions) => {
-        this.suggestions.set(suggestions);
-        this.applyFilter();
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to load suggestions. Please try again.');
-        this.loading.set(false);
-        console.error('Error loading suggestions:', err);
-      }
-    });
-  }
-
-  loadAvailableTypes() {
-    this.suggestionService.getUniqueTypes().subscribe({
-      next: (types) => {
-        this.availableTypes.set(types);
-      },
-      error: (err) => {
-        console.error('Error loading types:', err);
-      }
-    });
+  refreshSuggestions() {
+    this.store.dispatch(SuggestionActions.loadSuggestions());
   }
 
   onTypeFilterChange(type: string) {
-    this.selectedType.set(type);
-    this.applyFilter();
-  }
-
-  applyFilter() {
-    const type = this.selectedType();
-    const all = this.suggestions();
-    if (!type) {
-      this.filteredSuggestions.set(all);
-    } else {
-      this.filteredSuggestions.set(all.filter(s => s.type === type));
-    }
+    this.store.dispatch(SuggestionActions.setTypeFilter({ typeFilter: type }));
   }
 
   onSubmit() {
@@ -94,45 +64,17 @@ export class SuggestionComponent implements OnInit {
   }
 
   createSuggestion(suggestion: CreateSuggestionRequest) {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.suggestionService.createSuggestion(suggestion).subscribe({
-      next: (newSuggestion) => {
-        this.suggestions.update(suggestions => [...suggestions, newSuggestion]);
-        this.applyFilter();
-        this.loadAvailableTypes();
-        this.resetForm();
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to create suggestion. Please try again.');
-        this.loading.set(false);
-        console.error('Error creating suggestion:', err);
-      }
-    });
+    this.store.dispatch(SuggestionActions.addSuggestion({ suggestion }));
+    this.resetForm();
   }
 
-  updateSuggestion(id: string, suggestion: UpdateSuggestionRequest) {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.suggestionService.updateSuggestion(id, suggestion).subscribe({
-      next: (updatedSuggestion) => {
-        this.suggestions.update(suggestions =>
-          suggestions.map(s => s.id === id ? updatedSuggestion : s)
-        );
-        this.applyFilter();
-        this.loadAvailableTypes();
-        this.resetForm();
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to update suggestion. Please try again.');
-        this.loading.set(false);
-        console.error('Error updating suggestion:', err);
-      }
-    });
+  updateSuggestion(id: string, updateRequest: UpdateSuggestionRequest) {
+    const suggestion: Suggestion = {
+      id,
+      ...updateRequest
+    };
+    this.store.dispatch(SuggestionActions.updateSuggestion({ suggestion }));
+    this.resetForm();
   }
 
   editSuggestion(suggestion: Suggestion) {
@@ -148,24 +90,7 @@ export class SuggestionComponent implements OnInit {
       return;
     }
 
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.suggestionService.deleteSuggestion(id).subscribe({
-      next: () => {
-        this.suggestions.update(suggestions =>
-          suggestions.filter(s => s.id !== id)
-        );
-        this.applyFilter();
-        this.loadAvailableTypes();
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to delete suggestion. Please try again.');
-        this.loading.set(false);
-        console.error('Error deleting suggestion:', err);
-      }
-    });
+    this.store.dispatch(SuggestionActions.deleteSuggestion({ id }));
   }
 
   cancelEdit() {

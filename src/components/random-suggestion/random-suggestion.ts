@@ -1,8 +1,13 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SuggestionService } from '../../services/suggestion.service';
 import { Suggestion } from '../../models/suggestion.model';
+import { AppState } from '../../store/suggestion.state';
+import * as SuggestionActions from '../../store/suggestion.actions';
+import * as SuggestionSelectors from '../../store/suggestion.selectors';
 
 @Component({
   selector: 'app-random-suggestion',
@@ -11,10 +16,13 @@ import { Suggestion } from '../../models/suggestion.model';
   styleUrl: './random-suggestion.scss',
 })
 export class RandomSuggestionComponent implements OnInit {
+  private readonly store = inject(Store<AppState>);
   private readonly suggestionService = inject(SuggestionService);
   private readonly fb = inject(FormBuilder);
 
-  availableTypes = signal<string[]>([]);
+  // Use store for available types
+  availableTypes = toSignal(this.store.select(SuggestionSelectors.selectUniqueTypes), { initialValue: [] });
+
   currentSuggestion = signal<Suggestion | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
@@ -25,24 +33,8 @@ export class RandomSuggestionComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.loadAvailableTypes();
-  }
-
-  loadAvailableTypes() {
-    this.loading.set(true);
-    this.error.set(null);
-
-    this.suggestionService.getUniqueTypes().subscribe({
-      next: (types) => {
-        this.availableTypes.set(types);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to load suggestion types. Please try again.');
-        this.loading.set(false);
-        console.error('Error loading types:', err);
-      }
-    });
+    // Load suggestions to populate types in store
+    this.store.dispatch(SuggestionActions.loadSuggestions());
   }
 
   getRandomSuggestion() {
